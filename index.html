@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>jQuery Plugin</title>
+	<style>
+		body {
+			margin: 0;
+			padding: 0;
+			background-color: #F7F7F7;
+			font-family: '微软雅黑';
+		}
+
+		.wrapper {
+			padding: 50px;
+		}
+
+		img {
+			display: block;
+			width: 100%;
+		}
+
+		.items {
+			position: relative;
+		}
+
+		.item {
+			width: 228px;
+			position: absolute;
+		}
+		.tipes {
+			width: 280px;
+			height: 40px;
+			margin: 30px auto 0;
+			text-align: center;
+			line-height: 40px;
+			background-color: #ccc;
+			border-radius: 6px;
+			font-size: 24px;
+			cursor: pointer;
+		}
+
+		.tipes.loading {
+			background-color: transparent;
+		}
+		.loading{ width: 80px; height: 40px; margin: 0 auto; margin-top:100px; } 
+		.loading span{ display: inline-block; width: 8px; height: 100%; border-radius: 4px; background: lightgreen; -webkit-animation: load 1s ease infinite; } 
+		@-webkit-keyframes load{ 0%,100%{ height: 40px; background: lightgreen; } 50%{ height: 70px; margin: -15px 0; background: lightblue; } } 
+		.loading span:nth-child(2){ -webkit-animation-delay:0.2s; } 
+		.loading span:nth-child(3){ -webkit-animation-delay:0.4s; } 
+		.loading span:nth-child(4){ -webkit-animation-delay:0.6s; } 
+		.loading span:nth-child(5){ -webkit-animation-delay:0.8s; }
+
+	</style>
+</head>
+<body>
+	<div class="wrapper">
+		<div class="items">
+		</div>
+		<!-- <p class="tipes">正在加载...</p> -->
+		<div class="tipes loading">
+			<span></span>
+			<span></span>
+			<span></span>
+			<span></span>
+			<span></span>
+		</div>
+	</div>
+	<script src="./js/jquery.min.js"></script>
+	<script src="./js/template-native.js"></script>
+	<script src="./waterFall.js"></script>
+	<script>
+
+	function getData(page){
+		// 请求数据
+		$.ajax({
+			url:'data.php',
+			type:'post',
+			data:{page:page},
+			beforeSend:function(){
+
+			},
+			success:function(data){
+				// console.log(data);
+
+				var html = template('tpl',data);
+				console.log(html);
+				// 把内容渲染到页面 会叠加到一块
+				$('.items').append(html);
+				// 调用写好的插件，把页面平图
+				$('.items').waterFall();
+
+				// 把页码放到按钮上面
+				$('.tipes').attr('data-page',data.page);
+			}
+		});
+	}
+
+	// 首次加载
+	getData(1);
+
+	// 添加点击事件
+/*	$('.tipes').on('click',function(){
+		if($(this).hasClass('loading')){
+			return;
+		}
+		var page = $(this).attr('data-page');
+		getData(page);
+	});*/
+
+	// 滚动加载
+	$(window).on('scroll',function(){
+		var offsetTop = $('.items').offset().top;
+		var height = $('.items').height();
+		var scrollTop = $(this).scrollTop();
+		var winHeight = $(this).height();
+
+		var offset = offsetTop + height - scrollTop - winHeight;
+
+		if(offset <=200 && $('.tipes').is('.loading')){
+			var page = $('.tipes').attr('data-page');
+			getData(page);
+		}
+
+	});
+
+</script>
+
+
+	<!-- 模板 -->
+	<script type="text/template" id="tpl">
+		<% for(var i=0;i<items.length;i++){ %>
+			<div class="item">
+				<img src="<%= items[i].path %>">
+				<p><%= items[i].text %></p>
+			</div>
+		<% } %>
+	</script>
+</body>
+</html>
